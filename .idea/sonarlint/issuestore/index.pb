@@ -1,0 +1,23 @@
+
+A
+gradle.properties,2\a\2afbb999f001938c88fa43fc2ef52abf0f8213e4
+e
+5app/src/main/java/com/example/quiz/QuestionsList.java,b\6\b63e39436cc8ea119a08efefbc8e2ee14b5d5de0
+e
+5app/src/main/java/com/example/quiz/StartActivity.java,b\f\bf5cdcffa3cd0731185725f298a1f6e53293e374
+@
+build.gradle.kts,d\b\dbcff70658daf80b53ce624f6adcaa529df5ed8d
+I
+gradle/libs.versions.toml,d\7\d7595319a0658be6f1ed500ad590d42e4b28bc4f
+H
+app/google-services.json,f\d\fd8d34b142d02ec743a8efefefd2c097961666e9
+D
+app/build.gradle.kts,d\2\d2a4383452aad84a18429a5844d31330a012a9e6
+b
+2app/src/main/java/com/example/quiz/QuizResult.java,f\a\fa556e3769fe600083de129f914a15aeac3fedcd
+P
+ app/src/main/AndroidManifest.xml,8\c\8c55c3ccc257e5907959013f99656e4c8ec3903e
+j
+:app/src/main/java/com/example/quiz/InstructionsDialog.java,8\2\82637af948c287fc99f3be2f96747e14f6e359e7
+d
+4app/src/main/java/com/example/quiz/MainActivity.java,e\c\ec099dceb8293364939a7c0ccfa4c1dbc81ddc8b
