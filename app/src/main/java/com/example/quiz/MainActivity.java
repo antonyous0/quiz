@@ -2,24 +2,21 @@ package com.example.quiz;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.YuvImage;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatButton;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,37 +29,49 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import kotlinx.coroutines.channels.ChannelResult;
-
 public class MainActivity extends AppCompatActivity {
 
-    // creating question list
-    private final List<QuestionsList>questionsLists = new ArrayList<>();
+    // Firebase authentication
+    private FirebaseAuth auth;
+    private FirebaseUser user;
 
-    private TextView quizTimer;
-
+    // UI Elements
+    private TextView quizTimer, questionTV, totalQuestionTV, currentQuestionTV;
     private RelativeLayout option1Layout, option2Layout, option3Layout, option4Layout;
     private TextView option1Tv, option2Tv, option3Tv, option4Tv;
-    private ImageView option1Icon, option2Icon,option3Icon,option4Icon;
-    private TextView questionTV;
-    private TextView totalQuestionTV;
-    private TextView currentQuestion;
+    private ImageView option1Icon, option2Icon, option3Icon, option4Icon;
 
+    // Quiz data
+    private final List<QuestionsList> questionsLists = new ArrayList<>();
     private final DatabaseReference databaseReference = FirebaseDatabase.getInstance()
             .getReferenceFromUrl("https://quizapp-ae0b4-default-rtdb.firebaseio.com");
-
-
     private CountDownTimer countDownTimer;
     private int currentQuestionPosition = 0;
-    private int selectedOption = 0 ;
-
+    private int selectedOption = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize Firebase
+        auth = FirebaseAuth.getInstance();
+        user = auth.getCurrentUser();
+
+        if (user == null) {
+            // Redirect to login if user is not authenticated
+            Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
+        // Initialize UI elements
         quizTimer = findViewById(R.id.quizTimer);
+        questionTV = findViewById(R.id.questionTV);
+        totalQuestionTV = findViewById(R.id.totalQuestionsTV);
+        currentQuestionTV = findViewById(R.id.currentQuestionTV);
+
         option1Layout = findViewById(R.id.option1Layout);
         option2Layout = findViewById(R.id.option2Layout);
         option3Layout = findViewById(R.id.option3Layout);
@@ -73,69 +82,60 @@ public class MainActivity extends AppCompatActivity {
         option3Tv = findViewById(R.id.option3Tv);
         option4Tv = findViewById(R.id.option4Tv);
 
-
         option1Icon = findViewById(R.id.option1Icon);
         option2Icon = findViewById(R.id.option2Icon);
         option3Icon = findViewById(R.id.option3Icon);
         option4Icon = findViewById(R.id.option4Icon);
 
-        questionTV = findViewById(R.id.questionTV);
-        totalQuestionTV = findViewById(R.id.totalQuestionsTV);
-        currentQuestion = findViewById(R.id.currentQuestionTV);
 
-        final AppCompatButton nextBtn = findViewById(R.id.nextQuestionBtn);
+        // Display user email
+        //TextView userEmail = findViewById(R.id.userEmail);
+        //userEmail.setText(user.getEmail());
 
+        // Logout button functionality
+
+        // Show instructions dialog
         InstructionsDialog instructionsDialog = new InstructionsDialog(MainActivity.this);
         instructionsDialog.setCancelable(false);
         instructionsDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         instructionsDialog.show();
 
+        // Load quiz data from Firebase
+        loadQuizData();
+
+        // Set up option click listeners
+        setupOptionClickListeners();
+
+        // Next question button
+        findViewById(R.id.nextQuestionBtn).setOnClickListener(v -> handleNextQuestion());
+    }
+
+    private void loadQuizData() {
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // Fetch quiz time
                 String quizTimeString = snapshot.child("time").getValue(String.class);
-                int getQuizTime;
-
-                if (quizTimeString == null || quizTimeString.isEmpty()) {
-                    // If the "time" key is missing or empty, use a default value
-                    Toast.makeText(MainActivity.this, "Quiz time not found. Using default value (120 seconds).", Toast.LENGTH_SHORT).show();
-                    getQuizTime = 120; // Default to 120 seconds
-                } else {
-                    // Parse the quiz time
-                    try {
-                        getQuizTime = Integer.parseInt(quizTimeString);
-                    } catch (NumberFormatException e) {
-                        Toast.makeText(MainActivity.this, "Invalid quiz time format. Using default value (120 seconds).", Toast.LENGTH_SHORT).show();
-                        getQuizTime = 120; // Default fallback value
-                    }
-                }
+                int quizTime = parseQuizTime(quizTimeString);
 
                 // Load questions
-                for (DataSnapshot questions : snapshot.child("questions").getChildren()) {
-                    String getQuestion = questions.child("question").getValue(String.class);
-                    String getOption1 = questions.child("option1").getValue(String.class);
-                    String getOption2 = questions.child("option2").getValue(String.class);
-                    String getOption3 = questions.child("option3").getValue(String.class);
-                    String getOption4 = questions.child("option4").getValue(String.class);
-                    String getAnswerString = questions.child("answer").getValue(String.class);
+                for (DataSnapshot questionSnapshot : snapshot.child("questions").getChildren()) {
+                    String question = questionSnapshot.child("question").getValue(String.class);
+                    String option1 = questionSnapshot.child("option1").getValue(String.class);
+                    String option2 = questionSnapshot.child("option2").getValue(String.class);
+                    String option3 = questionSnapshot.child("option3").getValue(String.class);
+                    String option4 = questionSnapshot.child("option4").getValue(String.class);
+                    String answerString = questionSnapshot.child("answer").getValue(String.class);
 
-                    if (getQuestion != null && getOption1 != null && getOption2 != null
-                            && getOption3 != null && getOption4 != null && getAnswerString != null) {
-                        try {
-                            int getAnswer = Integer.parseInt(getAnswerString);
-                            QuestionsList questionsList =
-                                    new QuestionsList(getQuestion, getOption1, getOption2, getOption3, getOption4, getAnswer);
-                            questionsLists.add(questionsList);
-                        } catch (NumberFormatException e) {
-                            Toast.makeText(MainActivity.this, "Invalid answer format for a question.", Toast.LENGTH_SHORT).show();
-                        }
+                    if (isValidQuestion(question, option1, option2, option3, option4, answerString)) {
+                        int answer = Integer.parseInt(answerString);
+                        questionsLists.add(new QuestionsList(question, option1, option2, option3, option4, answer));
                     }
                 }
 
-                // Update UI elements
+                // Initialize quiz UI
                 totalQuestionTV.setText("/" + questionsLists.size());
-                setQuizTimer(getQuizTime);
+                setQuizTimer(quizTime);
                 selectQuestion(currentQuestionPosition);
             }
 
@@ -144,141 +144,101 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Failed to get data from Firebase", Toast.LENGTH_SHORT).show();
             }
         });
-
-
-        option1Layout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                selectedOption = 1;
-                selectOption(option1Layout, option1Icon);
-
-            }
-        });
-        option2Layout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                selectedOption = 2;
-
-                selectOption(option2Layout, option2Icon);
-
-            }
-        });
-        option3Layout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                selectedOption = 3;
-                selectOption(option3Layout, option3Icon);
-
-            }
-        });
-        option4Layout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                selectedOption = 4;
-                selectOption(option4Layout, option4Icon);
-
-            }
-        });
-
-        nextBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (selectedOption != 0 ){
-                    questionsLists.get(currentQuestionPosition).setUserSelectedAnswer(selectedOption);
-
-                    selectedOption = 0;
-                    currentQuestionPosition++;
-
-                    if (currentQuestionPosition < questionsLists.size()){
-                        selectQuestion(currentQuestionPosition);
-
-                    }
-                    else {
-                        countDownTimer.cancel();
-                        finishQuiz();
-                    }
-
-                }
-                else {
-                    Toast.makeText(MainActivity.this, "Please select an option" , Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
     }
 
-    private void finishQuiz(){
-        Intent intent = new Intent(MainActivity.this, QuizResult.class);
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("questions",(Serializable) questionsLists);
-
-        intent.putExtras(bundle);
-        startActivity(intent);
-
-        finish();
+    private int parseQuizTime(String quizTimeString) {
+        if (quizTimeString == null || quizTimeString.isEmpty()) {
+            Toast.makeText(this, "Quiz time not found. Using default value (120 seconds).", Toast.LENGTH_SHORT).show();
+            return 120;
+        }
+        try {
+            return Integer.parseInt(quizTimeString);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Invalid quiz time format. Using default value (120 seconds).", Toast.LENGTH_SHORT).show();
+            return 120;
+        }
     }
 
-    private void setQuizTimer(int maxTimeInSeconds){
-        countDownTimer  = new CountDownTimer(maxTimeInSeconds * 1000,1000) {
+    private boolean isValidQuestion(String question, String option1, String option2, String option3, String option4, String answerString) {
+        return question != null && option1 != null && option2 != null && option3 != null && option4 != null && answerString != null;
+    }
+
+    private void setQuizTimer(int maxTimeInSeconds) {
+        countDownTimer = new CountDownTimer(maxTimeInSeconds * 1000L, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-
-                long getHour  = TimeUnit.MILLISECONDS.toHours(millisUntilFinished);
-                long getMinute = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished);
-                long getSecond = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished);
-
-                String generateTime = String.format(Locale.getDefault(), "%02d:%02d:%02d", getHour,
-                        getMinute - TimeUnit.HOURS.toMinutes(getHour),
-                        getSecond - TimeUnit.MINUTES.toSeconds(getMinute));
-
-                quizTimer.setText(generateTime);
-
+                String timeFormatted = String.format(Locale.getDefault(), "%02d:%02d:%02d",
+                        TimeUnit.MILLISECONDS.toHours(millisUntilFinished),
+                        TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) % 60,
+                        TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60);
+                quizTimer.setText(timeFormatted);
             }
 
             @Override
             public void onFinish() {
-
                 finishQuiz();
-
             }
         };
-
         countDownTimer.start();
-
     }
 
-    private void selectQuestion(int questionListPosition){
+    private void setupOptionClickListeners() {
+        option1Layout.setOnClickListener(v -> selectOption(1, option1Layout, option1Icon));
+        option2Layout.setOnClickListener(v -> selectOption(2, option2Layout, option2Icon));
+        option3Layout.setOnClickListener(v -> selectOption(3, option3Layout, option3Icon));
+        option4Layout.setOnClickListener(v -> selectOption(4, option4Layout, option4Icon));
+    }
+
+    private void handleNextQuestion() {
+        if (selectedOption == 0) {
+            Toast.makeText(this, "Please select an option", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        questionsLists.get(currentQuestionPosition).setUserSelectedAnswer(selectedOption);
+        selectedOption = 0;
+        currentQuestionPosition++;
+        if (currentQuestionPosition < questionsLists.size()) {
+            selectQuestion(currentQuestionPosition);
+        } else {
+            countDownTimer.cancel();
+            finishQuiz();
+        }
+    }
+
+    private void finishQuiz() {
+        Intent intent = new Intent(MainActivity.this, QuizResult.class);
+        intent.putExtra("questions", (Serializable) questionsLists);
+        startActivity(intent);
+        finish();
+    }
+
+    private void selectQuestion(int questionPosition) {
         resetOptions();
-        questionTV.setText(questionsLists.get(questionListPosition).getQuestion());
-        option1Tv.setText(questionsLists.get(questionListPosition).getOption1());
-        option2Tv.setText(questionsLists.get(questionListPosition).getOption2());
-        option3Tv.setText(questionsLists.get(questionListPosition).getOption3());
-        option4Tv.setText(questionsLists.get(questionListPosition).getOption4());
-
-        currentQuestion.setText("Question"+ (questionListPosition + 1));
+        QuestionsList currentQuestion = questionsLists.get(questionPosition);
+        questionTV.setText(currentQuestion.getQuestion());
+        option1Tv.setText(currentQuestion.getOption1());
+        option2Tv.setText(currentQuestion.getOption2());
+        option3Tv.setText(currentQuestion.getOption3());
+        option4Tv.setText(currentQuestion.getOption4());
+        currentQuestionTV.setText("Question " + (questionPosition + 1));
     }
 
-    private void resetOptions(){
-        option1Layout.setBackgroundResource(R.drawable.round_back_white50_10);
-        option2Layout.setBackgroundResource(R.drawable.round_back_white50_10);
-        option3Layout.setBackgroundResource(R.drawable.round_back_white50_10);
-        option4Layout.setBackgroundResource(R.drawable.round_back_white50_10);
-
-
-        option1Icon.setImageResource(R.drawable.round_back_withe50_100);
-        option2Icon.setImageResource(R.drawable.round_back_withe50_100);
-        option3Icon.setImageResource(R.drawable.round_back_withe50_100);
-        option4Icon.setImageResource(R.drawable.round_back_withe50_100);
+    private void resetOptions() {
+        resetOptionStyle(option1Layout, option1Icon);
+        resetOptionStyle(option2Layout, option2Icon);
+        resetOptionStyle(option3Layout, option3Icon);
+        resetOptionStyle(option4Layout, option4Icon);
     }
 
-    private void selectOption(RelativeLayout selectedOptionLayout, ImageView selectedOptionIcon){
+    private void resetOptionStyle(RelativeLayout layout, ImageView icon) {
+        layout.setBackgroundResource(R.drawable.round_back_white50_10);
+        icon.setImageResource(R.drawable.round_back_withe50_100);
+    }
 
+    private void selectOption(int option, RelativeLayout layout, ImageView icon) {
         resetOptions();
-
-        selectedOptionIcon.setImageResource(R.drawable.check_icon);
-        selectedOptionLayout.setBackgroundResource(R.drawable.round_back_selected_option);
-
+        selectedOption = option;
+        layout.setBackgroundResource(R.drawable.round_back_selected_option);
+        icon.setImageResource(R.drawable.check_icon);
     }
-
-
 }

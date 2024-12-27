@@ -1,21 +1,14 @@
 
-K
-java:S1604•"(Make this anonymous inner class a lambda(ÓĞœ†üÿÿÿÿ8ıŒ­´¾2
-K
-java:S1604"(Make this anonymous inner class a lambda(ù±ı¤úÿÿÿÿ8şŒ­´¾2
-K
-java:S1604¦"(Make this anonymous inner class a lambda(ö™Îäıÿÿÿÿ8şŒ­´¾2
-K
-java:S1604®"(Make this anonymous inner class a lambda(¬¥©¦ûÿÿÿÿ8şŒ­´¾2
-K
-java:S1604·"(Make this anonymous inner class a lambda(¨™ôçùÿÿÿÿ8şŒ­´¾2
-i
-java:S2184Ş"FCast one of the operands of this multiplication operation to a "long".(İÿÙùÿÿÿÿ8€­´¾2
+c
+java:S1659'"GDeclare "questionTV" and all following declarations on a separate line.(›Ÿïe8â¸ŞÑ¿2
 l
-java:S1659,"JDeclare "option2Layout" and all following declarations on a separate line.(¹î®°úÿÿÿÿ8ö­´¾2
+java:S1659("JDeclare "option2Layout" and all following declarations on a separate line.(¹î®°úÿÿÿÿ8â¸ŞÑ¿2
 h
-java:S1659-"FDeclare "option2Tv" and all following declarations on a separate line.(‰×â‘ıÿÿÿÿ8ö­´¾2
+java:S1659)"FDeclare "option2Tv" and all following declarations on a separate line.(‰×â‘ıÿÿÿÿ8ã¸ŞÑ¿2
 j
-java:S1659."HDeclare "option2Icon" and all following declarations on a separate line.(À‹¼øùÿÿÿÿ8ö­´¾2
-t
-java:S3776="RRefactor this method to reduce its Cognitive Complexity from 24 to the 15 allowed.(¨Œşÿÿÿÿ8ü­´¾2
+java:S1659*"HDeclare "option2Icon" and all following declarations on a separate line.(À‹¼øùÿÿÿÿ8ã¸ŞÑ¿2
+u
+java:S1450#"SRemove the "auth" field and declare it as a local variable in the relevant methods.(Ú‡›æøÿÿÿÿ8ã¸ŞÑ¿2
+u
+java:S1450$"SRemove the "user" field and declare it as a local variable in the relevant methods.(š·àûÿÿÿÿ8ã¸ŞÑ¿2
+]	java:S125\"<This block of commented-out lines of code should be removed.(‹šøÂşÿÿÿÿ8ğ¸ŞÑ¿2

@@ -10,6 +10,8 @@
     <color name="primary">#141933</color>
     <color name="secondary">#06CBED</color>
     <color name="color3">#11C59C</color>
-
+    <color name="dark_blue">#414863</color>
+    <color name="red">#D74342</color>
+    <color name="custom_stroke_color">#FF0000</color>
 
 </resources>

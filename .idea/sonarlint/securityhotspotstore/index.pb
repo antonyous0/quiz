@@ -21,3 +21,7 @@ j
 :app/src/main/java/com/example/quiz/InstructionsDialog.java,8\2\82637af948c287fc99f3be2f96747e14f6e359e7
 d
 4app/src/main/java/com/example/quiz/MainActivity.java,e\c\ec099dceb8293364939a7c0ccfa4c1dbc81ddc8b
+e
+5app/src/main/java/com/example/quiz/LoginActivity.java,c\8\c81311c337d383939f05e771ce2733f5f1da373c
+h
+8app/src/main/java/com/example/quiz/RegisterActivity.java,6\1\610960464397a61b195f4c0c175b4c2cbf2e0753

@@ -10,6 +10,7 @@ constraintlayout = "2.2.0"
 firebase-bom = "33.7.0"
 firebase-database = "20.3.3"
 multidex = "2.0.1"
+firebaseAuth = "23.1.0"
 
 [libraries]
 # Testing Libraries
@@ -27,6 +28,7 @@ multidex = { group = "androidx.multidex", name = "multidex", version.ref = "mult
 # Firebase Libraries
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebase-database" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
